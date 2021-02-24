@@ -1,0 +1,8 @@
+{
+	"properties": {
+		"delivery_mode": 2
+	},
+	"routing_key": "${routingKey}",
+	"payload": "{\u0022jobName\u0022: \u0022${jobName}\u0022, \u0022projectName\u0022: \u0022${projectName}\u0022, \u0022jobParams\u0022: \u0022${jobParams}\u0022}",
+	"payload_encoding": "string"
+}

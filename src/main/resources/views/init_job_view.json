@@ -1,0 +1,90 @@
+{
+		"type": "workflow_step",
+		"callback_id": "start_tests",
+		"submit_disabled": true,
+		"blocks": [
+		{
+			"type": "header",
+			"text": {
+				"type": "plain_text",
+				"text": "Please configure your integration properties",
+				"emoji": false
+			}
+		},
+		{
+			"type": "divider"
+		},
+		{
+			"type": "input",
+			"block_id": "routing_key",
+			"label": {
+				"type": "plain_text",
+				"text": "RabbitMQ routing key"
+			},
+			"element": {
+				"type": "plain_text_input",
+				"action_id": "routing_key",
+				"placeholder": {
+					"type": "plain_text",
+					"text": "Enter supported routing key"
+				}
+				${routing_key_initial_value}
+			}
+		},
+		{
+			"type": "input",
+			"block_id": "repo",
+			"label": {
+				"type": "plain_text",
+				"text": "Name of test project repository"
+			},
+			"element": {
+				"type": "plain_text_input",
+				"action_id": "repo",
+				"placeholder": {
+					"type": "plain_text",
+					"text": "Specify name of the repo"
+				}
+				${repo_initial_value}
+			}
+		},
+		{
+			"type": "input",
+			"block_id": "suite",
+			"label": {
+				"type": "plain_text",
+				"text": "Test suite to run"
+			},
+			"element": {
+				"type": "plain_text_input",
+				"action_id": "suite",
+				"placeholder": {
+					"type": "plain_text",
+					"text": "Choose test suite for running"
+				}
+				${suite_initial_value}
+			}
+		},
+		{
+			"type": "input",
+			"dispatch_action": true,
+			"block_id": "custom_params",
+			"label": {
+				"type": "plain_text",
+				"text": "Custom job parameters"
+			},
+			"element": {
+				"type": "plain_text_input",
+				"action_id": "job_params_entered",
+				"placeholder": {
+					"type": "plain_text",
+					"text": "Specify custom job parameter names separated by space"
+				},
+				"dispatch_action_config": {
+				"trigger_actions_on": ["on_enter_pressed"]
+				}
+				${params_initial_value}
+			}
+		}
+		]
+}

@@ -58,7 +58,7 @@ public class MyAppSpring {
 
 	@Bean
 	public App initSlackApp() {
-		var app = new App().asOAuthApp(true);
+		App app = new App().asOAuthApp(true);
 
 		AmazonS3InstallationService installationService = new AmazonS3InstallationService(BUCKET_NAME);
 		installationService.setHistoricalDataEnabled(true);
@@ -67,7 +67,7 @@ public class MyAppSpring {
 		app.service(installationService).service(stateService);
 
 		app.event(AppHomeOpenedEvent.class, (payload, ctx) -> {
-			var appHomeView = view(view -> view.type("home").blocks(asBlocks(
+			View appHomeView = view(view -> view.type("home").blocks(asBlocks(
 					section(section -> section.text(markdownText(mt -> mt.text(
 							"*This is slack app which helps to publish RabbitMQ requests for Jenkins job triggering.*")))),
 					divider(), section(section -> section.text(markdownText(mt -> mt

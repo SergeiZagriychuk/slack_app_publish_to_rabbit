@@ -112,7 +112,6 @@ public class MyAppSpring {
 									: "");
 					StrSubstitutor sub = new StrSubstitutor(values, "${", "}");
 					String bodyWInitValues = sub.replace(viewJson);
-					System.err.println(bodyWInitValues);
 					ViewsOpenRequest viewsOpenRequest = ViewsOpenRequest.builder().triggerId(triggerId)
 							.viewAsString(bodyWInitValues).build();
 					ViewsOpenResponse openResponse = ctx.client().viewsOpen(viewsOpenRequest);

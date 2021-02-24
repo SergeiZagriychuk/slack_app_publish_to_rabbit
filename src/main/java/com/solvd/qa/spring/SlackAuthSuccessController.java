@@ -11,14 +11,14 @@ import com.slack.api.bolt.servlet.WebEndpointServlet;
 @WebServlet(urlPatterns = { "/slack/oauth/completion" })
 public class SlackAuthSuccessController extends WebEndpointServlet {
 
-    private final static WebEndpoint ENDPOINT = new WebEndpoint(Method.GET, "/slack/oauth/completion");
+	private final static WebEndpoint ENDPOINT = new WebEndpoint(Method.GET, "/slack/oauth/completion");
 
-    public SlackAuthSuccessController(App app) {
-        super(ENDPOINT, app.getWebEndpointHandlers().get(ENDPOINT), app.config());
-    }
+	public SlackAuthSuccessController(App app) {
+		super(ENDPOINT, app.getWebEndpointHandlers().get(ENDPOINT), app.config());
+	}
 
-    static String renderCompletionPageHtml(String queryString) {
-        return "<http><body><h3 align='center'><br/><br/><br/>Slack app was successfully authorized to your workspace! &#128079;&#128079;&#128079;</h3></body></http>";
-    }
+	static String renderCompletionPageHtml(String queryString) {
+		return "<http><body><h3 align='center'><br/><br/><br/>Slack app was successfully authorized to your workspace! &#128079;&#128079;&#128079;</h3></body></http>";
+	}
 
 }

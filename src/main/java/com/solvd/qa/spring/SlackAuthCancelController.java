@@ -11,14 +11,14 @@ import com.slack.api.bolt.servlet.WebEndpointServlet;
 @WebServlet(urlPatterns = { "/slack/oauth/cancellation" })
 public class SlackAuthCancelController extends WebEndpointServlet {
 
-    private final static WebEndpoint ENDPOINT = new WebEndpoint(Method.GET, "/slack/oauth/cancellation");
+	private final static WebEndpoint ENDPOINT = new WebEndpoint(Method.GET, "/slack/oauth/cancellation");
 
-    public SlackAuthCancelController(App app) {
-        super(ENDPOINT, app.getWebEndpointHandlers().get(ENDPOINT), app.config());
-    }
+	public SlackAuthCancelController(App app) {
+		super(ENDPOINT, app.getWebEndpointHandlers().get(ENDPOINT), app.config());
+	}
 
-    static String renderCancellationPageHtml(String queryString) {
-        return "<http><body><h3 align='center'><br/><br/><br/>Error during authorization! &#128532;&#128533;&#128561;</h3></body></http>";
-    }
+	static String renderCancellationPageHtml(String queryString) {
+		return "<http><body><h3 align='center'><br/><br/><br/>Error during authorization! &#128532;&#128533;&#128561;</h3></body></http>";
+	}
 
 }

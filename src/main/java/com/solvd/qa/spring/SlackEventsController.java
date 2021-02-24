@@ -8,7 +8,9 @@ import com.slack.api.bolt.servlet.SlackAppServlet;
 @SuppressWarnings("serial")
 @WebServlet("/slack/events")
 public class SlackEventsController extends SlackAppServlet {
-    public SlackEventsController(App app) {
-        super(app);
-    }
+
+	public SlackEventsController(App app) {
+		super(app);
+	}
+
 }

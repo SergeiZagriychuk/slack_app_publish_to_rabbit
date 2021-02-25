@@ -1,0 +1,10 @@
+server:
+  port: 8443
+  http2:
+    enabled: true
+  ssl:
+    enabled: true
+    key-store: classpath:keystore.p12
+    key-store-password: password
+    key-store-type: pkcs12
+    key-alias: tomcat

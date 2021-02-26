@@ -30,8 +30,8 @@
 	<failsafe.version>2.4.0</failsafe.version>
 	<json-path.version>2.4.0</json-path.version>
 	<aws-java-sdk-s3.version>1.11.957</aws-java-sdk-s3.version>
-	<rest-assured.version>4.3.3</rest-assured.version>
-	<groovy.version>3.0.2</groovy.version>
+	<rest-assured.version>4.3.2</rest-assured.version>
+	<groovy.version>3.0.6</groovy.version>
   </properties>
 
 	<dependencies>

@@ -14,6 +14,7 @@
 		{
 			"type": "divider"
 		},
+		<#if rabbit_flow?exists>
 		{
 			"type": "input",
 			"block_id": "routing_key",
@@ -28,9 +29,10 @@
 					"type": "plain_text",
 					"text": "Enter supported routing key"
 				}
-				${routing_key_initial_value}
+				<#if routing_key_initial_value?exists>,"initial_value": "${routing_key_initial_value}"</#if>
 			}
 		},
+		</#if>
 		{
 			"type": "input",
 			"block_id": "repo",
@@ -45,7 +47,7 @@
 					"type": "plain_text",
 					"text": "Specify name of the repo"
 				}
-				${repo_initial_value}
+				<#if repo_initial_value?exists>,"initial_value": "${repo_initial_value}"</#if>
 			}
 		},
 		{
@@ -62,7 +64,7 @@
 					"type": "plain_text",
 					"text": "Choose test suite for running"
 				}
-				${suite_initial_value}
+				<#if suite_initial_value?exists>,"initial_value": "${suite_initial_value}"</#if>
 			}
 		},
 		{
@@ -83,7 +85,7 @@
 				"dispatch_action_config": {
 				"trigger_actions_on": ["on_enter_pressed"]
 				}
-				${params_initial_value}
+				<#if params_initial_value?exists>,"initial_value": "${params_initial_value}"</#if>
 			}
 		}
 		]

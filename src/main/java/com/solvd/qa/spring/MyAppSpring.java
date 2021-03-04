@@ -10,7 +10,7 @@ import static com.slack.api.model.block.element.BlockElements.plainTextInput;
 import static com.slack.api.model.view.Views.view;
 import static com.slack.api.model.workflow.WorkflowSteps.asStepOutputs;
 import static com.slack.api.model.workflow.WorkflowSteps.stepInput;
-import static com.solvd.qa.workflow.step.builder.BuilderUtil.extract;
+import static com.solvd.qa.util.BuilderUtil.extract;
 import static io.restassured.http.ContentType.JSON;
 
 import java.util.ArrayList;

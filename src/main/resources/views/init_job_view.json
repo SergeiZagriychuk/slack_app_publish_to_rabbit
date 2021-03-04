@@ -53,7 +53,7 @@
 			"block_id": "suite",
 			"label": {
 				"type": "plain_text",
-				"text": "Test suite to run"
+				"text": "Test job to run"
 			},
 			"element": {
 				"type": "plain_text_input",

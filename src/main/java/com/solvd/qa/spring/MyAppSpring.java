@@ -10,6 +10,7 @@ import static com.slack.api.model.block.element.BlockElements.plainTextInput;
 import static com.slack.api.model.view.Views.view;
 import static com.slack.api.model.workflow.WorkflowSteps.asStepOutputs;
 import static com.slack.api.model.workflow.WorkflowSteps.stepInput;
+import static com.solvd.qa.workflow.step.builder.BuilderUtil.extract;
 import static io.restassured.http.ContentType.JSON;
 
 import java.util.ArrayList;
@@ -42,6 +43,7 @@ import com.slack.api.model.workflow.WorkflowStepExecution;
 import com.slack.api.model.workflow.WorkflowStepInput;
 import com.slack.api.model.workflow.WorkflowStepOutput;
 import com.solvd.qa.util.FileUtil;
+import com.solvd.qa.workflow.step.builder.Keys;
 
 import io.restassured.RestAssured;
 import lombok.extern.slf4j.Slf4j;
@@ -49,10 +51,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Configuration
 public class MyAppSpring {
-
-	private enum Keys {
-		routing_key, suite, repo
-	}
 
 	private final static String BUCKET_NAME = System.getenv("S3_BUCKET_NAME");
 
@@ -227,11 +225,6 @@ public class MyAppSpring {
 		});
 
 		return app;
-	}
-
-	private static String extract(Map<String, Map<String, ViewState.Value>> stateValues, String blockId,
-			String actionId) {
-		return stateValues.get(blockId).get(actionId).getValue();
 	}
 
 }

@@ -14,6 +14,7 @@
 		{
 			"type": "divider"
 		},
+		<#if rabbit_flow?exists>
 		{
 			"type": "input",
 			"block_id": "routing_key",
@@ -28,9 +29,29 @@
 					"type": "plain_text",
 					"text": "Enter supported routing key"
 				}
-				${routing_key_initial_value}
+				<#if routing_key_init_value?exists>,"initial_value": "${routing_key_init_value}"</#if>
 			}
 		},
+		</#if>
+		<#if jenkins_flow?exists>
+		{
+			"type": "input",
+			"block_id": "tenant",
+			"label": {
+				"type": "plain_text",
+				"text": "Jenkins tenant name"
+			},
+			"element": {
+				"type": "plain_text_input",
+				"action_id": "tenant",
+				"placeholder": {
+					"type": "plain_text",
+					"text": "Enter supported tenant name"
+				}
+				<#if tenant_init_value?exists>,"initial_value": "${tenant_init_value}"</#if>
+			}
+		},
+		</#if>
 		{
 			"type": "input",
 			"block_id": "repo",
@@ -45,7 +66,7 @@
 					"type": "plain_text",
 					"text": "Specify name of the repo"
 				}
-				${repo_initial_value}
+				<#if repo_init_value?exists>,"initial_value": "${repo_init_value}"</#if>
 			}
 		},
 		{
@@ -53,7 +74,7 @@
 			"block_id": "suite",
 			"label": {
 				"type": "plain_text",
-				"text": "Test suite to run"
+				"text": "Test job to run"
 			},
 			"element": {
 				"type": "plain_text_input",
@@ -62,7 +83,7 @@
 					"type": "plain_text",
 					"text": "Choose test suite for running"
 				}
-				${suite_initial_value}
+				<#if suite_init_value?exists>,"initial_value": "${suite_init_value}"</#if>
 			}
 		},
 		{
@@ -83,7 +104,7 @@
 				"dispatch_action_config": {
 				"trigger_actions_on": ["on_enter_pressed"]
 				}
-				${params_initial_value}
+				<#if params_init_value?exists>,"initial_value": "${params_init_value}"</#if>
 			}
 		}
 		]

@@ -64,7 +64,7 @@ public class MyAppSpring {
 		});
 
 		app.step(new JenkinsWorkflow().buildStep());
-//		app.step(new RabbitWorkflow().buildStep());
+		app.step(new RabbitWorkflow().buildStep());
 
 		/**
 		 * handling of custom parameters setting

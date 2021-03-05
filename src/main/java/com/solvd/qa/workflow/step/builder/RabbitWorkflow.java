@@ -5,10 +5,10 @@ import static io.restassured.http.ContentType.JSON;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 import org.apache.commons.lang3.EnumUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.text.StrSubstitutor;
 import org.hamcrest.Matchers;
 
 import com.slack.api.bolt.context.builtin.WorkflowStepExecuteContext;
@@ -17,32 +17,36 @@ import com.slack.api.bolt.request.builtin.WorkflowStepExecuteRequest;
 import com.slack.api.bolt.response.Response;
 import com.slack.api.methods.SlackApiException;
 import com.slack.api.model.workflow.WorkflowStepExecution;
-import com.solvd.qa.util.FileUtil;
+import com.solvd.qa.enums.Keys;
+import com.solvd.qa.util.FreemarkerUtil;
 
 import io.restassured.RestAssured;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class RabbitWorkflow extends AbstractWorkflow {
-	
+
+	public final static String CALLBACK_ID = "start_tests_rabbit";
+
 	@Override
 	protected boolean isRabbitFlow() {
 		return true;
 	}
-	
+
 	@Override
 	protected String getCallbackName() {
-		return "start_tests";
+		return CALLBACK_ID;
 	}
 
 	@Override
 	protected WorkflowStepExecuteHandler buildExecuteStep() {
 		return new WorkflowStepExecuteHandler() {
-			
+
+			@SuppressWarnings("unchecked")
 			@Override
 			public Response apply(WorkflowStepExecuteRequest req, WorkflowStepExecuteContext ctx)
 					throws IOException, SlackApiException {
-				log.info("Execute workflow step");
+				log.info("Execute workflow step for RabbitMQ flow");
 				WorkflowStepExecution wfStep = req.getPayload().getEvent().getWorkflowStep();
 				Map<String, Object> outputs = new HashMap<>();
 				wfStep.getInputs().keySet().stream().forEach(k -> {
@@ -50,19 +54,19 @@ public class RabbitWorkflow extends AbstractWorkflow {
 				});
 				try {
 					log.debug("MAP: " + StringUtils.join(outputs));
-					Map<String, String> values = new HashMap<String, String>();
-					values.put("routingKey", outputs.get(Keys.routing_key.toString()).toString());
-					values.put("jobName", outputs.get(Keys.suite.toString()).toString());
-					values.put("projectName", outputs.get(Keys.repo.toString()).toString());
+					Properties p = new Properties();
+					p.put("routingKey", outputs.get(Keys.routing_key.toString()).toString());
+					p.put("jobName", outputs.get(Keys.suite.toString()).toString());
+					p.put("projectName", outputs.get(Keys.repo.toString()).toString());
 					final StringBuilder jobParams = new StringBuilder();
 					outputs.keySet().stream().filter(k -> !EnumUtils.isValidEnum(Keys.class, k))
 							.forEach(k -> jobParams.append(String.format("&%s=%s", k, outputs.get(k))));
 					if (jobParams.length() > 0) {
 						jobParams.deleteCharAt(0);
 					}
-					values.put("jobParams", jobParams.toString());
-					StrSubstitutor sub = new StrSubstitutor(values, "${", "}");
-					String body = sub.replace(FileUtil.getResourceFileAsString("rabbitmq/publish_msg.json"));
+					p.put("jobParams", jobParams.toString());
+					String body = FreemarkerUtil.processTemplate("rabbitmq/publish_msg.json", p);
+
 					RestAssured.given().body(body).contentType(JSON).accept(JSON).urlEncodingEnabled(false).auth()
 							.basic(System.getenv("RABBIT_LOGIN"), System.getenv("RABBIT_PSWD"))
 							.post(System.getenv("RABBIT_PUBLISH_URL")).then().and().assertThat().statusCode(200)

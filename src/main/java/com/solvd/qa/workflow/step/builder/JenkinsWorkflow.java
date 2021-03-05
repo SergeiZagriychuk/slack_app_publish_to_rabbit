@@ -1,14 +1,11 @@
 package com.solvd.qa.workflow.step.builder;
 
-import static io.restassured.http.ContentType.JSON;
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.EnumUtils;
-import org.apache.commons.lang3.text.StrSubstitutor;
-import org.hamcrest.Matchers;
 
 import com.slack.api.bolt.context.builtin.WorkflowStepExecuteContext;
 import com.slack.api.bolt.handler.builtin.WorkflowStepExecuteHandler;
@@ -16,58 +13,69 @@ import com.slack.api.bolt.request.builtin.WorkflowStepExecuteRequest;
 import com.slack.api.bolt.response.Response;
 import com.slack.api.methods.SlackApiException;
 import com.slack.api.model.workflow.WorkflowStepExecution;
-import com.solvd.qa.util.FileUtil;
+import com.solvd.qa.enums.Keys;
+import com.solvd.qa.model.JenkinsAuth;
+import com.solvd.qa.util.workflow.AmazonS3JenkinsAuthService;
 
 import io.restassured.RestAssured;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class JenkinsWorkflow extends AbstractWorkflow {
-	
+
+	public final static String CALLBACK_ID = "start_tests_jenkins";
+
 	@Override
 	protected boolean isRabbitFlow() {
 		return false;
 	}
-	
+
 	@Override
 	protected String getCallbackName() {
-		return "start_tests_jenkins";
+		return CALLBACK_ID;
 	}
 
 	@Override
 	protected WorkflowStepExecuteHandler buildExecuteStep() {
 		return new WorkflowStepExecuteHandler() {
-			
+
 			@Override
 			public Response apply(WorkflowStepExecuteRequest req, WorkflowStepExecuteContext ctx)
 					throws IOException, SlackApiException {
-				log.info("Execute workflow step");
+				log.info("Execute workflow step for Jenkins flow");
 				WorkflowStepExecution wfStep = req.getPayload().getEvent().getWorkflowStep();
 				Map<String, Object> outputs = new HashMap<>();
 				wfStep.getInputs().keySet().stream().forEach(k -> {
 					outputs.put(k.toString(), wfStep.getInputs().get(k).getValue());
 				});
 				try {
-					Map<String, String> values = new HashMap<String, String>();
-					values.put("jobName", outputs.get(Keys.suite.toString()).toString());
-					values.put("projectName", outputs.get(Keys.repo.toString()).toString());
-					final StringBuilder jobParams = new StringBuilder();
-					outputs.keySet().stream().filter(k -> !EnumUtils.isValidEnum(Keys.class, k))
-							.forEach(k -> jobParams.append(String.format("&%s=%s", k, outputs.get(k))));
-					if (jobParams.length() > 0) {
-						jobParams.deleteCharAt(0);
+					Object tenant = outputs.get(Keys.tenant.toString());
+					Object repo = outputs.get(Keys.repo.toString());
+					Object suite = outputs.get(Keys.suite.toString());
+					String url;
+					if (tenant != null) {
+						url = String.format("%sjob/%s/job/%s/job/%s/buildWithParameters", System.getenv("JENKINS_URL"),
+								tenant, repo, suite);
+					} else if (outputs.get(Keys.repo.toString()) != null) {
+						url = String.format("%s/job/%s/job/%s/buildWithParameters", System.getenv("JENKINS_URL"), repo,
+								suite);
+					} else {
+						url = String.format("%s/job/%s/buildWithParameters", System.getenv("JENKINS_URL"), suite);
 					}
-					values.put("jobParams", jobParams.toString());
-					StrSubstitutor sub = new StrSubstitutor(values, "${", "}");
-					String body = sub.replace(FileUtil.getResourceFileAsString("rabbitmq/publish_msg.json"));
-					RestAssured.given().body(body).contentType(JSON).accept(JSON).urlEncodingEnabled(false).auth()
-							.basic(System.getenv("RABBIT_LOGIN"), System.getenv("RABBIT_PSWD"))
-							.post(System.getenv("RABBIT_PUBLISH_URL")).then().and().assertThat().statusCode(200)
-							.body("routed", Matchers.equalTo(true));
+
+					Map<String, Object> jobParams = outputs.entrySet().stream()
+							.filter(e -> !EnumUtils.isValidEnum(Keys.class, e.getKey()))
+							.collect(Collectors.toMap(x -> x.getKey(), x -> x.getValue()));
+
+					JenkinsAuth auth = new AmazonS3JenkinsAuthService().getAuthForTeam(req.getPayload().getTeamId());
+
+					RestAssured.given().urlEncodingEnabled(false).auth().preemptive()
+							.basic(auth.getUsername(), auth.getApiToken()).params(jobParams).post(url).then().and()
+							.assertThat().statusCode(201);
 
 					ctx.complete(outputs);
 
-					log.info("Job was successfully triggered");
+					log.info("Jenkins job was successfully triggered");
 				} catch (Exception e) {
 					Map<String, Object> error = new HashMap<>();
 					error.put("message", "Something wrong!" + System.lineSeparator() + e.getMessage());

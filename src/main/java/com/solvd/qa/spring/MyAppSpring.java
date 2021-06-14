@@ -32,6 +32,7 @@ import com.slack.api.model.view.ViewState;
 import com.solvd.qa.util.workflow.BuilderUtil;
 import com.solvd.qa.workflow.step.builder.JenkinsWorkflow;
 import com.solvd.qa.workflow.step.builder.RabbitWorkflow;
+import com.solvd.qa.workflow.step.builder.STFWorkflow;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -65,6 +66,7 @@ public class MyAppSpring {
 
 		app.step(new JenkinsWorkflow().buildStep());
 		app.step(new RabbitWorkflow().buildStep());
+		app.step(new STFWorkflow().buildStep());
 
 		/**
 		 * handling of custom parameters setting

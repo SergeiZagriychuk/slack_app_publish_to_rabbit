@@ -1,0 +1,53 @@
+{
+		"type": "workflow_step",
+		"callback_id": "process_webhook",
+		"blocks": [
+		{
+			"type": "header",
+			"text": {
+				"type": "plain_text",
+				"text": "Configure run over webhook",
+				"emoji": false
+			}
+		},
+		{
+			"type": "divider"
+		},
+		{
+			"type": "input",
+			"block_id": "tenant",
+			"optional": false,
+			"label": {
+				"type": "plain_text",
+				"text": "Tenant name"
+			},
+			"element": {
+				"type": "plain_text_input",
+				"action_id": "tenant",
+				"placeholder": {
+					"type": "plain_text",
+					"text": "Enter supported tenant name"
+				}
+				<#if tenant_init_value?exists>,"initial_value": "${tenant_init_value}"</#if>
+			}
+		},
+		{
+			"type": "input",
+			"block_id": "webhook",
+			"optional": false,
+			"label": {
+				"type": "plain_text",
+				"text": "Webhook url (copied from associated workflow)"
+			},
+			"element": {
+				"type": "plain_text_input",
+				"action_id": "webhook",
+				"placeholder": {
+					"type": "plain_text",
+					"text": "Associated webhook url"
+				}
+				<#if webhook_init_value?exists>,"initial_value": "${webhook_init_value}"</#if>
+			}
+		}
+		]
+}

@@ -22,7 +22,7 @@
 				"text": "Webhook url (from Zebrunner launchers page)"
 			},
 			"element": {
-				"type": "plain_text_input",
+				"type": "url_text_input",
 				"action_id": "webhook",
 				"placeholder": {
 					"type": "plain_text",
@@ -37,7 +37,7 @@
 			"optional": true,
 			"label": {
 				"type": "plain_text",
-				"text": "Secret value (optional)"
+				"text": "Secret value"
 			},
 			"element": {
 				"type": "plain_text_input",

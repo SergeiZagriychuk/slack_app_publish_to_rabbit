@@ -68,7 +68,10 @@ public class ZebrunnerWorkflow {
 			Map<String, Map<String, ViewState.Value>> stateValues = req.getPayload().getView().getState().getValues();
 			Map<String, WorkflowStepInput> inputs = new HashMap<>();
 			stateValues.keySet().stream().forEach(k -> {
-				inputs.put(k, stepInput(i -> i.value(extract(stateValues, k, k))));
+				String val = extract(stateValues, k, k);
+				if (!StringUtils.isEmpty(val)) {
+					inputs.put(k, stepInput(i -> i.value(val)));
+				}
 			});
 			List<WorkflowStepOutput> outputs = asStepOutputs();
 			ctx.update(inputs, outputs);

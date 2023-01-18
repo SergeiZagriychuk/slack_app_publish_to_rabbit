@@ -15,6 +15,7 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang3.StringUtils;
 
 import com.slack.api.bolt.middleware.builtin.WorkflowStep;
 import com.slack.api.methods.request.views.ViewsOpenRequest;
@@ -83,7 +84,7 @@ public class ZebrunnerWorkflow {
 				Object webhookUrl = outputs.get(KEY_WEBHOOK);
 				Object secret = outputs.get(KEY_SECRET);
 
-				callWebhook(webhookUrl.toString(), secret.toString());
+				callWebhook(webhookUrl.toString(), secret == null ? "" : secret.toString());
 
 				ctx.complete(outputs);
 
@@ -107,12 +108,18 @@ public class ZebrunnerWorkflow {
 	}
 
 	public static String callWebhook(String url, String secret) throws Exception {
-		String ts = Instant.now().toString();
-		String sign = encode(secret, url.concat(ts));
+		String resultsLink;
+		if (StringUtils.isEmpty(secret)) {
+			resultsLink = RestAssured.given().urlEncodingEnabled(false).with().contentType(ContentType.JSON).post(url)
+					.then().and().assertThat().statusCode(202).extract().jsonPath().getString("data.resultsLink");
+		} else {
+			String ts = Instant.now().toString();
+			String sign = encode(secret, url.concat(ts));
 
-		String resultsLink = RestAssured.given().urlEncodingEnabled(false).with().header("x-zbr-timestamp", ts)
-				.header("x-zbr-signature", sign).contentType(ContentType.JSON).post(url).then().and().assertThat()
-				.statusCode(202).extract().jsonPath().getString("data.resultsLink");
+			resultsLink = RestAssured.given().urlEncodingEnabled(false).with().header("x-zbr-timestamp", ts)
+					.header("x-zbr-signature", sign).contentType(ContentType.JSON).post(url).then().and().assertThat()
+					.statusCode(202).extract().jsonPath().getString("data.resultsLink");
+		}
 		return resultsLink;
 	}
 

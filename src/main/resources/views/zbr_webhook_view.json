@@ -34,7 +34,7 @@
 		{
 			"type": "input",
 			"block_id": "secret",
-			"optional": false,
+			"optional": true,
 			"label": {
 				"type": "plain_text",
 				"text": "Secret value (optional)"

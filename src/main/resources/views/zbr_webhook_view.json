@@ -1,0 +1,53 @@
+{
+		"type": "workflow_step",
+		"callback_id": "zbr_webhook",
+		"blocks": [
+		{
+			"type": "header",
+			"text": {
+				"type": "plain_text",
+				"text": "Configure Zebrunner launch over webhook",
+				"emoji": false
+			}
+		},
+		{
+			"type": "divider"
+		},
+		{
+			"type": "input",
+			"block_id": "webhook",
+			"optional": false,
+			"label": {
+				"type": "plain_text",
+				"text": "Webhook url (from Zebrunner launchers page)"
+			},
+			"element": {
+				"type": "plain_text_input",
+				"action_id": "webhook",
+				"placeholder": {
+					"type": "plain_text",
+					"text": "Webhook url"
+				}
+				<#if webhook_init_value?exists>,"initial_value": "${webhook_init_value}"</#if>
+			}
+		},
+		{
+			"type": "input",
+			"block_id": "secret",
+			"optional": false,
+			"label": {
+				"type": "plain_text",
+				"text": "Secret value (optional)"
+			},
+			"element": {
+				"type": "plain_text_input",
+				"action_id": "secret",
+				"placeholder": {
+					"type": "plain_text",
+					"text": "Enter secret value"
+				}
+				<#if secret_init_value?exists>,"initial_value": "${secret_init_value}"</#if>
+			}
+		}
+		]
+}

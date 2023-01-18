@@ -28,6 +28,7 @@ import com.solvd.qa.util.FreemarkerUtil;
 
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
+import io.restassured.specification.RequestSpecification;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -37,6 +38,8 @@ public class ZebrunnerWorkflow {
 
 	private final static String KEY_WEBHOOK = "webhook";
 	private final static String KEY_SECRET = "secret";
+	private final static String KEY_ENV_VARS = "env_vars";
+	private final static String KEY_SLACK_WEBHOOK = "slack_webhook";
 
 	public WorkflowStep buildStep() {
 
@@ -51,8 +54,14 @@ public class ZebrunnerWorkflow {
 			if (inputs.containsKey(KEY_WEBHOOK)) {
 				p.put("webhook_init_value", inputs.get(KEY_WEBHOOK).getValue().toString());
 			}
-			if (inputs.containsKey(KEY_WEBHOOK)) {
+			if (inputs.containsKey(KEY_SECRET)) {
 				p.put("secret_init_value", inputs.get(KEY_SECRET).getValue().toString());
+			}
+			if (inputs.containsKey(KEY_ENV_VARS)) {
+				p.put("env_vars_init_value", inputs.get(KEY_ENV_VARS).getValue().toString());
+			}
+			if (inputs.containsKey(KEY_SLACK_WEBHOOK)) {
+				p.put("slack_webhook_init_value", inputs.get(KEY_SLACK_WEBHOOK).getValue().toString());
 			}
 			String bodyWInitValues = FreemarkerUtil.processTemplate("views/zbr_webhook_view.json", p);
 			ViewsOpenRequest viewsOpenRequest = ViewsOpenRequest.builder().triggerId(triggerId)
@@ -83,11 +92,22 @@ public class ZebrunnerWorkflow {
 			wfStep.getInputs().keySet().stream().forEach(k -> {
 				outputs.put(k.toString(), wfStep.getInputs().get(k).getValue());
 			});
+			Object slackWebhook = null;
 			try {
 				Object webhookUrl = outputs.get(KEY_WEBHOOK);
 				Object secret = outputs.get(KEY_SECRET);
+				Object envVars = outputs.get(KEY_ENV_VARS);
+				slackWebhook = outputs.get(KEY_SLACK_WEBHOOK);
 
-				callWebhook(webhookUrl.toString(), secret == null ? "" : secret.toString());
+				String resultLink = callWebhook(webhookUrl.toString(), secret, envVars);
+
+				if (slackWebhook != null) {
+					String runUrl = getResults(resultLink, secret);
+					postSlackMessage(
+							"Zebrunner launcher was successfully triggered. Monitor results by next link <a href=\""
+									+ runUrl + "\">Link</a>",
+							slackWebhook.toString());
+				}
 
 				ctx.complete(outputs);
 
@@ -95,6 +115,9 @@ public class ZebrunnerWorkflow {
 			} catch (Exception e) {
 				Map<String, Object> error = new HashMap<>();
 				error.put("message", "Something wrong!" + System.lineSeparator() + e.getMessage());
+				if (slackWebhook != null) {
+					postSlackMessage("Error happened during triggering: " + e.getMessage(), slackWebhook.toString());
+				}
 				ctx.fail(error);
 			}
 			return ctx.ack();
@@ -110,20 +133,59 @@ public class ZebrunnerWorkflow {
 		return Base64.encodeBase64String(sha256HMAC.doFinal(data.getBytes("UTF-8")));
 	}
 
-	public static String callWebhook(String url, String secret) throws Exception {
-		String resultsLink;
-		if (StringUtils.isEmpty(secret)) {
-			resultsLink = RestAssured.given().urlEncodingEnabled(false).with().contentType(ContentType.JSON).post(url)
-					.then().and().assertThat().statusCode(202).extract().jsonPath().getString("data.resultsLink");
-		} else {
-			String ts = Instant.now().toString();
-			String sign = encode(secret, url.concat(ts));
+	public static String callWebhook(String url, Object secret, Object envVars) throws Exception {
+		RequestSpecification requestSpecification = RestAssured.given().urlEncodingEnabled(false).with()
+				.contentType(ContentType.JSON);
 
-			resultsLink = RestAssured.given().urlEncodingEnabled(false).with().header("x-zbr-timestamp", ts)
-					.header("x-zbr-signature", sign).contentType(ContentType.JSON).post(url).then().and().assertThat()
-					.statusCode(202).extract().jsonPath().getString("data.resultsLink");
+		if (secret != null) {
+			String ts = Instant.now().toString();
+			String sign = encode(secret.toString(), url.concat(ts));
+			requestSpecification = requestSpecification.header("x-zbr-timestamp", ts).header("x-zbr-signature", sign);
 		}
+
+		if (envVars != null) {
+			String jsonEnvVars = "{ \"config\": { \"envVars\": [ %s ] } }";
+			String rpl = "";
+			for (String pair : envVars.toString().split(";")) {
+				rpl = rpl.concat(String.format("{ \"name\": \"%s\", \"value\": \"%s\" }, ",
+						StringUtils.substringBefore(pair, "="), StringUtils.substringAfter(pair, "=")));
+			}
+			if (StringUtils.isNotEmpty(rpl)) {
+				rpl = StringUtils.removeEnd(rpl, ", ");
+			}
+			jsonEnvVars = String.format(jsonEnvVars, rpl);
+			log.info(jsonEnvVars);
+
+			requestSpecification = requestSpecification.body(jsonEnvVars);
+		}
+
+		String resultsLink = requestSpecification.post(url).then().and().assertThat().statusCode(202).extract()
+				.jsonPath().getString("data.resultsLink");
 		return resultsLink;
+	}
+
+	public static String getResults(String url, Object secret) throws Exception {
+		RequestSpecification requestSpecification = RestAssured.given().urlEncodingEnabled(false).with()
+				.contentType(ContentType.JSON);
+
+		if (secret != null) {
+			String ts = Instant.now().toString();
+			String sign = encode(secret.toString(), url.concat(ts));
+			requestSpecification = requestSpecification.header("x-zbr-timestamp", ts).header("x-zbr-signature", sign);
+		}
+
+		String resultsLink = requestSpecification.get(url).then().and().assertThat().statusCode(200).extract()
+				.jsonPath().getString("_links.htmlUrl");
+		return resultsLink;
+	}
+
+	public void postSlackMessage(String msg, String slackWebhook) {
+		Properties p = new Properties();
+		p.put("msg", msg);
+		String webhookBody = FreemarkerUtil.processTemplate("webhook/slack_webhook_zbr_rq.json", p);
+
+		RestAssured.given().urlEncodingEnabled(false).with().body(webhookBody).post(slackWebhook).then().and()
+				.assertThat().statusCode(200);
 	}
 
 }

@@ -48,6 +48,42 @@
 				}
 				<#if secret_init_value?exists>,"initial_value": "${secret_init_value}"</#if>
 			}
+		},
+		{
+			"type": "input",
+			"block_id": "env_vars",
+			"optional": true,
+			"label": {
+				"type": "plain_text",
+				"text": "Environment variables (to override run parameters), e.g. 'SUITE=minimal-acceptance;retry_count=3'"
+			},
+			"element": {
+				"type": "plain_text_input",
+				"action_id": "env_vars",
+				"placeholder": {
+					"type": "plain_text",
+					"text": "Enter environment variables"
+				}
+				<#if env_vars_init_value?exists>,"initial_value": "${env_vars_init_value}"</#if>
+			}
+		},
+		{
+			"type": "input",
+			"block_id": "slack_webhook",
+			"optional": true,
+			"label": {
+				"type": "plain_text",
+				"text": "Slack webhook for output printing"
+			},
+			"element": {
+				"type": "plain_text_input",
+				"action_id": "slack_webhook",
+				"placeholder": {
+					"type": "plain_text",
+					"text": "Enter slack webhook"
+				}
+				<#if slack_webhook_init_value?exists>,"initial_value": "${slack_webhook_init_value}"</#if>
+			}
 		}
 		]
 }

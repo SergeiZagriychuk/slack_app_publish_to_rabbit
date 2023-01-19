@@ -40,6 +40,7 @@ public class ZebrunnerWorkflow {
 	private final static String KEY_SECRET = "secret";
 	private final static String KEY_ENV_VARS = "env_vars";
 	private final static String KEY_SLACK_WEBHOOK = "slack_webhook";
+	private final static String KEY_REQUESTER = "requester";
 
 	public WorkflowStep buildStep() {
 
@@ -62,6 +63,9 @@ public class ZebrunnerWorkflow {
 			}
 			if (inputs.containsKey(KEY_SLACK_WEBHOOK)) {
 				p.put("slack_webhook_init_value", inputs.get(KEY_SLACK_WEBHOOK).getValue().toString());
+			}
+			if (inputs.containsKey(KEY_REQUESTER)) {
+				p.put("requester_init_value", inputs.get(KEY_REQUESTER).getValue().toString());
 			}
 			String bodyWInitValues = FreemarkerUtil.processTemplate("views/zbr_webhook_view.json", p);
 			ViewsOpenRequest viewsOpenRequest = ViewsOpenRequest.builder().triggerId(triggerId)
@@ -92,20 +96,30 @@ public class ZebrunnerWorkflow {
 			wfStep.getInputs().keySet().stream().forEach(k -> {
 				outputs.put(k.toString(), wfStep.getInputs().get(k).getValue());
 			});
-			Object slackWebhook = null;
+
+			// building of slack message template
+			Object envVars = outputs.get(KEY_ENV_VARS);
+			Object slackWebhook = outputs.get(KEY_SLACK_WEBHOOK);
+			Object requester = outputs.get(KEY_REQUESTER);
+			String msgTemplate = "Zebrunner launcher was triggered";
+			if (requester != null) {
+				msgTemplate = msgTemplate.concat(" by " + requester.toString());
+			}
+			if (envVars != null) {
+				msgTemplate = msgTemplate.concat(" with parameters '" + envVars.toString() + "'");
+			}
+			msgTemplate = msgTemplate.concat(".");
+
+			// calling of Zebrunner and sending status to slack
 			try {
 				Object webhookUrl = outputs.get(KEY_WEBHOOK);
 				Object secret = outputs.get(KEY_SECRET);
-				Object envVars = outputs.get(KEY_ENV_VARS);
-				slackWebhook = outputs.get(KEY_SLACK_WEBHOOK);
 
 				String resultLink = callWebhook(webhookUrl.toString(), secret, envVars);
 
 				if (slackWebhook != null) {
 					String runUrl = getResults(resultLink, secret);
-					postSlackMessage(
-							"Zebrunner launcher was successfully triggered. Monitor results by next link: " + runUrl,
-							slackWebhook.toString());
+					postSlackMessage(msgTemplate + " Monitor results by next link: " + runUrl, slackWebhook.toString());
 				}
 
 				ctx.complete(outputs);
@@ -115,7 +129,7 @@ public class ZebrunnerWorkflow {
 				Map<String, Object> error = new HashMap<>();
 				error.put("message", "Something wrong!" + System.lineSeparator() + e.getMessage());
 				if (slackWebhook != null) {
-					postSlackMessage("Error happened during triggering: " + e.getMessage(), slackWebhook.toString());
+					postSlackMessage(" Error happened during triggering: " + e.getMessage(), slackWebhook.toString());
 				}
 				ctx.fail(error);
 			}

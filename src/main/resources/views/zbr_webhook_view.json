@@ -84,6 +84,24 @@
 				}
 				<#if slack_webhook_init_value?exists>,"initial_value": "${slack_webhook_init_value}"</#if>
 			}
+		},
+		{
+			"type": "input",
+			"block_id": "requester",
+			"optional": true,
+			"label": {
+				"type": "plain_text",
+				"text": "User who requested the run"
+			},
+			"element": {
+				"type": "plain_text_input",
+				"action_id": "requester",
+				"placeholder": {
+					"type": "plain_text",
+					"text": "Choose user who triggered run"
+				}
+				<#if requester_init_value?exists>,"initial_value": "${requester_init_value}"</#if>
+			}
 		}
 		]
 }

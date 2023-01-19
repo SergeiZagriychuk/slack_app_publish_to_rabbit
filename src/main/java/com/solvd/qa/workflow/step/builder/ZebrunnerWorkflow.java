@@ -108,7 +108,7 @@ public class ZebrunnerWorkflow {
 			if (envVars != null) {
 				msgTemplate = msgTemplate.concat(" with parameters '" + envVars.toString() + "'");
 			}
-			msgTemplate = msgTemplate.concat(".");
+			msgTemplate = msgTemplate.concat(".\n");
 
 			// calling of Zebrunner and sending status to slack
 			try {
@@ -119,7 +119,7 @@ public class ZebrunnerWorkflow {
 
 				if (slackWebhook != null) {
 					String runUrl = getResults(resultLink, secret);
-					postSlackMessage(msgTemplate + " Monitor results by next link: " + runUrl, slackWebhook.toString());
+					postSlackMessage(msgTemplate + "Monitor results by next link: " + runUrl, slackWebhook.toString());
 				}
 
 				ctx.complete(outputs);
@@ -129,7 +129,8 @@ public class ZebrunnerWorkflow {
 				Map<String, Object> error = new HashMap<>();
 				error.put("message", "Something wrong!" + System.lineSeparator() + e.getMessage());
 				if (slackWebhook != null) {
-					postSlackMessage(" Error happened during triggering: " + e.getMessage(), slackWebhook.toString());
+					postSlackMessage(msgTemplate + "Error happened during triggering: " + e.getMessage(),
+							slackWebhook.toString());
 				}
 				ctx.fail(error);
 			}

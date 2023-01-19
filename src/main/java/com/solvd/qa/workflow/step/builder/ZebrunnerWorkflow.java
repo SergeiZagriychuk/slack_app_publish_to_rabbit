@@ -111,7 +111,7 @@ public class ZebrunnerWorkflow {
 				ctx.complete(outputs);
 
 				log.info("Webhook flow was successfully triggered");
-			} catch (Exception e) {
+			} catch (Throwable e) {
 				Map<String, Object> error = new HashMap<>();
 				error.put("message", "Something wrong!" + System.lineSeparator() + e.getMessage());
 				if (slackWebhook != null) {

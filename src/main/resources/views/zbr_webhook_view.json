@@ -76,7 +76,7 @@
 				"text": "Slack webhook for output printing"
 			},
 			"element": {
-				"type": "plain_text_input",
+				"type": "url_text_input",
 				"action_id": "slack_webhook",
 				"placeholder": {
 					"type": "plain_text",

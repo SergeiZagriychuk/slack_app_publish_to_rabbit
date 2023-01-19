@@ -104,8 +104,7 @@ public class ZebrunnerWorkflow {
 				if (slackWebhook != null) {
 					String runUrl = getResults(resultLink, secret);
 					postSlackMessage(
-							"Zebrunner launcher was successfully triggered. Monitor results by next link <a href=\""
-									+ runUrl + "\">Link</a>",
+							"Zebrunner launcher was successfully triggered. Monitor results by next link: " + runUrl,
 							slackWebhook.toString());
 				}
 
@@ -137,13 +136,13 @@ public class ZebrunnerWorkflow {
 		RequestSpecification requestSpecification = RestAssured.given().urlEncodingEnabled(false).with()
 				.contentType(ContentType.JSON);
 
-		if (secret != null) {
+		if (secret != null && StringUtils.isNoneEmpty(secret.toString())) {
 			String ts = Instant.now().toString();
 			String sign = encode(secret.toString(), url.concat(ts));
 			requestSpecification = requestSpecification.header("x-zbr-timestamp", ts).header("x-zbr-signature", sign);
 		}
 
-		if (envVars != null) {
+		if (envVars != null && StringUtils.isNoneEmpty(envVars.toString())) {
 			String jsonEnvVars = "{ \"config\": { \"envVars\": [ %s ] } }";
 			String rpl = "";
 			for (String pair : envVars.toString().split(";")) {
@@ -168,7 +167,7 @@ public class ZebrunnerWorkflow {
 		RequestSpecification requestSpecification = RestAssured.given().urlEncodingEnabled(false).with()
 				.contentType(ContentType.JSON);
 
-		if (secret != null) {
+		if (secret != null && StringUtils.isNoneEmpty(secret.toString())) {
 			String ts = Instant.now().toString();
 			String sign = encode(secret.toString(), url.concat(ts));
 			requestSpecification = requestSpecification.header("x-zbr-timestamp", ts).header("x-zbr-signature", sign);
@@ -179,7 +178,7 @@ public class ZebrunnerWorkflow {
 		return resultsLink;
 	}
 
-	public void postSlackMessage(String msg, String slackWebhook) {
+	public static void postSlackMessage(String msg, String slackWebhook) {
 		Properties p = new Properties();
 		p.put("msg", msg);
 		String webhookBody = FreemarkerUtil.processTemplate("webhook/slack_webhook_zbr_rq.json", p);

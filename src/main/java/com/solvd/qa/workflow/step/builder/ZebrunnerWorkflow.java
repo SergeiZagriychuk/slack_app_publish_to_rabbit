@@ -28,6 +28,7 @@ import com.solvd.qa.util.FreemarkerUtil;
 
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
+import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 import lombok.extern.slf4j.Slf4j;
 
@@ -140,14 +141,14 @@ public class ZebrunnerWorkflow {
 		return step;
 	}
 
-	public static String encode(String secretKey, String data) throws Exception {
+	private static String encode(String secretKey, String data) throws Exception {
 		Mac sha256HMAC = Mac.getInstance("HmacSHA256");
 		SecretKeySpec key = new SecretKeySpec(Arrays.copyOf(Base64.decodeBase64(secretKey), 64), "HmacSHA256");
 		sha256HMAC.init(key);
 		return Base64.encodeBase64String(sha256HMAC.doFinal(data.getBytes("UTF-8")));
 	}
 
-	public static String callWebhook(String url, Object secret, Object envVars) throws Exception {
+	private static String callWebhook(String url, Object secret, Object envVars) throws Exception {
 		RequestSpecification requestSpecification = RestAssured.given().urlEncodingEnabled(false).with()
 				.contentType(ContentType.JSON);
 
@@ -173,12 +174,12 @@ public class ZebrunnerWorkflow {
 			requestSpecification = requestSpecification.body(jsonEnvVars);
 		}
 
-		String resultsLink = requestSpecification.post(url).then().and().assertThat().statusCode(202).extract()
-				.jsonPath().getString("data.resultsLink");
+		String resultsLink = processApiResponse("Zebrunner webhook call", requestSpecification.post(url), 202).then()
+				.extract().jsonPath().getString("data.resultsLink");
 		return resultsLink;
 	}
 
-	public static String getResults(String url, Object secret) throws Exception {
+	private static String getResults(String url, Object secret) throws Exception {
 		RequestSpecification requestSpecification = RestAssured.given().urlEncodingEnabled(false).with()
 				.contentType(ContentType.JSON);
 
@@ -188,18 +189,28 @@ public class ZebrunnerWorkflow {
 			requestSpecification = requestSpecification.header("x-zbr-timestamp", ts).header("x-zbr-signature", sign);
 		}
 
-		String resultsLink = requestSpecification.get(url).then().and().assertThat().statusCode(200).extract()
-				.jsonPath().getString("_links.htmlUrl");
+		String resultsLink = processApiResponse("'Get Zebrunner run url' call", requestSpecification.get(url), 200)
+				.then().extract().jsonPath().getString("_links.htmlUrl");
 		return resultsLink;
 	}
 
-	public static void postSlackMessage(String msg, String slackWebhook) {
+	private static void postSlackMessage(String msg, String slackWebhook) {
 		Properties p = new Properties();
 		p.put("msg", msg);
 		String webhookBody = FreemarkerUtil.processTemplate("webhook/slack_webhook_zbr_rq.json", p);
 
-		RestAssured.given().urlEncodingEnabled(false).with().body(webhookBody).post(slackWebhook).then().and()
-				.assertThat().statusCode(200);
+		processApiResponse("Slack webhook call",
+				RestAssured.given().urlEncodingEnabled(false).with().body(webhookBody).post(slackWebhook), 200);
+	}
+
+	private static Response processApiResponse(String callDescription, Response rs, int expectedCode) {
+		int actCode = rs.getStatusCode();
+		String msg = rs.getBody().asString();
+		if (expectedCode != actCode) {
+			throw new RuntimeException(
+					String.format("%s failed with http status %d. Error message: %s", callDescription, actCode, msg));
+		}
+		return rs;
 	}
 
 }

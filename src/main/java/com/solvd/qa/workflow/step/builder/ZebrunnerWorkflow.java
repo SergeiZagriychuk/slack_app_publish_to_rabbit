@@ -207,7 +207,7 @@ public class ZebrunnerWorkflow {
 		int actCode = rs.getStatusCode();
 		String msg = rs.getBody().asString();
 		if (expectedCode != actCode) {
-			throw new RuntimeException(String.format("%s failed with http status %d. Error message: %s",
+			throw new RuntimeException(String.format("%s failed with http status %d.\nError message: %s",
 					callDescription, actCode, msg.replace("\"", "'")));
 		}
 		return rs;

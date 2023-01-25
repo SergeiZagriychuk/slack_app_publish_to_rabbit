@@ -127,12 +127,12 @@ public class ZebrunnerWorkflow {
 
 				log.info("Webhook flow was successfully triggered");
 			} catch (Throwable e) {
-				Map<String, Object> error = new HashMap<>();
-				error.put("message", "Something wrong!" + System.lineSeparator() + e.getMessage());
 				if (slackWebhook != null) {
 					postSlackMessage(msgTemplate + "Error happened during triggering: " + e.getMessage(),
 							slackWebhook.toString());
 				}
+				Map<String, Object> error = new HashMap<>();
+				error.put("message", "Something wrong!" + System.lineSeparator() + e.getMessage());
 				ctx.fail(error);
 			}
 			return ctx.ack();
@@ -148,7 +148,7 @@ public class ZebrunnerWorkflow {
 		return Base64.encodeBase64String(sha256HMAC.doFinal(data.getBytes("UTF-8")));
 	}
 
-	private static String callWebhook(String url, Object secret, Object envVars) throws Exception {
+	private String callWebhook(String url, Object secret, Object envVars) throws Exception {
 		RequestSpecification requestSpecification = RestAssured.given().urlEncodingEnabled(false).with()
 				.contentType(ContentType.JSON);
 
@@ -179,7 +179,7 @@ public class ZebrunnerWorkflow {
 		return resultsLink;
 	}
 
-	private static String getResults(String url, Object secret) throws Exception {
+	private String getResults(String url, Object secret) throws Exception {
 		RequestSpecification requestSpecification = RestAssured.given().urlEncodingEnabled(false).with()
 				.contentType(ContentType.JSON);
 
@@ -194,16 +194,17 @@ public class ZebrunnerWorkflow {
 		return resultsLink;
 	}
 
-	private static void postSlackMessage(String msg, String slackWebhook) {
+	private void postSlackMessage(String msg, String slackWebhook) {
 		Properties p = new Properties();
 		p.put("msg", msg);
 		String webhookBody = FreemarkerUtil.processTemplate("webhook/slack_webhook_zbr_rq.json", p);
 
 		processApiResponse("Slack webhook call",
-				RestAssured.given().urlEncodingEnabled(false).with().body(webhookBody).post(slackWebhook), 200);
+				RestAssured.given().urlEncodingEnabled(false).with().body(webhookBody).log().body().post(slackWebhook),
+				200);
 	}
 
-	private static Response processApiResponse(String callDescription, Response rs, int expectedCode) {
+	private Response processApiResponse(String callDescription, Response rs, int expectedCode) {
 		int actCode = rs.getStatusCode();
 		String msg = rs.getBody().asString();
 		if (expectedCode != actCode) {

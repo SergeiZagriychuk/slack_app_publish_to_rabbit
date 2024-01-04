@@ -175,7 +175,7 @@ public class ZebrunnerWorkflow {
 		}
 
 		String resultsLink = processApiResponse("Zebrunner webhook call", requestSpecification.post(url), 202).then()
-				.extract().jsonPath().getString("data.resultsLink");
+				.extract().jsonPath().getString("data.resultLink");
 		return resultsLink;
 	}
 
